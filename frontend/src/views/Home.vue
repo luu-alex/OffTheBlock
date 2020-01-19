@@ -23,7 +23,6 @@
             <v-col>
                 <v-text-field
                             v-model="firstname"
-                            :rules="nameRules"
                             label="First name"
                             required
                 ></v-text-field>
@@ -32,6 +31,10 @@
                             label="Age"
                             required
                 ></v-text-field>
+                <v-row width="300px" height="300px">
+                <v-date-picker v-model="picker" color="green lighten-1"></v-date-picker>
+            </v-row>
+
             </v-col>
 
 
@@ -69,6 +72,7 @@ import { WebCam } from 'vue-cam-vision'
 
 export default {
   data () {
+      console.log(this.picker)
     return {
         captures: [],
         imgReport: [],
@@ -81,6 +85,7 @@ export default {
         firstname: null,
         select: null,
         age: null,
+        picker: null
   }
 },
   name: "home",
@@ -107,6 +112,9 @@ export default {
                 Add the form data we need to submit
             */
       formData.append('file', this.img);
+      formData.append('name', this.firstName);
+      formData.append('dob', this.picker);;
+
 
         /*
           Make the request to the POST /single-file URL

@@ -1,5 +1,24 @@
 <template>
     <v-container class="grey lighten-5">
+        <v-col align="center" justify="center">
+            <v-row justify="center" align="center">
+            <WebCam
+                ref="webcam"
+                :deviceId="deviceId"
+                width="400px"
+                height="400px"
+                @cameras="onCameras"
+                @camera-change="onCameraChange"
+                :isFrontCam="frontCam"
+                >
+            </WebCam>
+            <v-avatar
+            tile="tile"
+                    size="60%"
+                      ><img :src="img"/>
+            </v-avatar>
+        </v-row>
+        </v-col>
         <v-row>
             <v-col>
                 <v-text-field
@@ -8,40 +27,37 @@
                             label="First name"
                             required
                 ></v-text-field>
+                <v-text-field
+                            v-model="age"
+                            label="Age"
+                            required
+                ></v-text-field>
             </v-col>
-            <v-col align="end" justify="end">
-                <WebCam
-                    ref="webcam"
-                    :deviceId="deviceId"
-                    width="30%"
-                    height="30%"
-                    @cameras="onCameras"
-                    @camera-change="onCameraChange"
-                    :isFrontCam="frontCam"
-                    >
-                </WebCam>
-                <v-avatar
-                            tile="tile"
-                            size="30%"
-                            color="grey lighten-4"
-                          ><img :src="img" />
-                </v-avatar>
-                <v-btn
-                        xs3
-                        color="primary"
-                        @click="onCapture"
-                      >Take photo
-                </v-btn>
-            </v-col>
-            <form>
-                <v-btn
-                        xs3
-                        color="primary"
-                        @click="submit"
-                      >Submit
-                </v-btn>
-            </form>
+
+
+            <v-btn
+                    xs3
+                    color="primary"
+                    @click="onCapture"
+                  >Take photo
+            </v-btn>
         </v-row>
+        <form>
+            <v-btn
+                    xs3
+                    color="primary"
+                    @click="submit"
+                  >Submit
+            </v-btn>
+        </form>
+        <p>
+        <!-- use router-link component for navigation. -->
+        <!-- specify the link by passing the `to` prop. -->
+        <!-- `<router-link>` will be rendered as an `<a>` tag by default -->
+        <router-link to="/about">Go to about</router-link>
+        <router-link to="/login">Go to Bar</router-link>
+      <router-view></router-view>
+        </p>
     </v-container>
 </template>
 
@@ -54,14 +70,17 @@ import { WebCam } from 'vue-cam-vision'
 export default {
   data () {
     return {
-      captures: [],
-      imgReport: [],
-      frontCam: false,
-      webcam: null,
-      img: null,
-      camera: null,
-      deviceId: null,
-      devices: [],
+        captures: [],
+        imgReport: [],
+        frontCam: false,
+        webcam: null,
+        img: null,
+        camera: null,
+        deviceId: null,
+        devices: [],
+        firstname: null,
+        select: null,
+        age: null,
   }
 },
   name: "home",
@@ -84,7 +103,6 @@ export default {
     },
     submit() {
       let formData = new FormData();
-
             /*
                 Add the form data we need to submit
             */
@@ -106,7 +124,7 @@ export default {
         .catch(function(err){
           console.log(err)
         });
-      
+
       // let formData = new FormData();
       // formData.append('avatar', this.img);
       // console.log('>> formData >> ', formData);

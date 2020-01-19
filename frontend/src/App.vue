@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
+    <v-app-bar app color="#5a9cff" dark>
       <v-toolbar-title class="title">Homeless app</v-toolbar-title>
     </v-app-bar>
 

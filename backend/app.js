@@ -79,18 +79,21 @@ app.post('/adduser', upload.single("file"), async function(req, res) {
     
     
     var base64Str = req.body.file.substring(0,req.body.file.length)
-    var path ='./uploads/';
-    var optionalObj = {'fileName': 'image', 'type':'jpg'};
+    var path ='/Users/zain/hackathon/uoft-hacks/facenet/data/images/temp/temp/';
+    var optionalObj = {'fileName': 'new_person', 'type':'jpg'};
 
     base64ToImage(base64Str,path,optionalObj); 
 
-    fs.readFile('./uploads/image.jpg', function(err, data) {
-        if(data){
-            let formData = new FormData();
-            formData.append('file', data);
+    // fs.readFile('./uploads/image.jpg', function(err, data) {
+    //     if(data){
+    //         let formData = new FormData();
+    //         formData.append('file', data);
+
+
+    //     }
+    // });
 
             axios.post( 'http://100.64.219.218:5000/check_exist',
-                  formData,
                   {
                   headers: {
                       'Content-Type': 'multipart/form-data'
@@ -102,8 +105,6 @@ app.post('/adduser', upload.single("file"), async function(req, res) {
                 .catch(function(err){
                   console.log(err);
                 });
-        }
-    });
 
 
     
@@ -121,7 +122,7 @@ app.post('/adduser', upload.single("file"), async function(req, res) {
 let abi = [ { "constant": true, "inputs": [ { "internalType": "uint256", "name": "hash", "type": "uint256" } ], "name": "hashExists", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "internalType": "uint256", "name": "hash", "type": "uint256" } ], "name": "set", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" } ]
 
 // Connect to the network
-let url = "http://localhost:7545";
+let url = "http://100.65.202.144:7545";
 let customHttpProvider = new ethers.providers.JsonRpcProvider(url);
 
 // The address from the above deployment example

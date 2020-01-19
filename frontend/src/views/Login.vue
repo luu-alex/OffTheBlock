@@ -42,6 +42,7 @@
 
 <script>
 // @ is an alias to /src
+import axios from 'axios';
 import { WebCam } from 'vue-cam-vision'
 
 export default {
@@ -74,7 +75,24 @@ export default {
   },
   async onCapture () {
     this.img = await this.$refs.webcam.capture()
-    console.log(this.img);
+    let formData = new FormData();
+          /*
+              Add the form data we need to submit
+          */
+    formData.append('file', this.img);
+    axios.post( 'http://localhost:3000/login',
+        formData,
+        {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+      }
+    ).then(function(){
+        console.log('SUCCESS!!');
+      })
+      .catch(function(err){
+        console.log(err)
+      });
   },
 },
   name: "about"

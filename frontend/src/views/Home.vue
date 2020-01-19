@@ -32,6 +32,9 @@
                             label="Age"
                             required
                 ></v-text-field>
+
+                <v-date-picker v-model="picker" color="green lighten-1"></v-date-picker>
+
             </v-col>
 
 

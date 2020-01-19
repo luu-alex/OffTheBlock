@@ -23,21 +23,21 @@ app.get('/', (req, res) => {
 });
 
 
-var firebaseConfig = {
-    apiKey: "LOOOL SIKE",
-    authDomain: "homeless-uofthacks.firebaseapp.com",
-    databaseURL: "https://homeless-uofthacks.firebaseio.com",
-    projectId: "homeless-uofthacks",
-    storageBucket: "homeless-uofthacks.appspot.com",
-    messagingSenderId: "431956862659",
-    appId: "1:431956862659:web:10a829c60b743f54282476"
-};
+// var firebaseConfig = {
+//     apiKey: "LOOOL SIKE",
+//     authDomain: "homeless-uofthacks.firebaseapp.com",
+//     databaseURL: "https://homeless-uofthacks.firebaseio.com",
+//     projectId: "homeless-uofthacks",
+//     storageBucket: "homeless-uofthacks.appspot.com",
+//     messagingSenderId: "431956862659",
+//     appId: "1:431956862659:web:10a829c60b743f54282476"
+// };
 
-firebase.initializeApp(firebaseConfig);
+// firebase.initializeApp(firebaseConfig);
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://homeless-uofthacks.firebaseio.com"
+    databaseURL: "https://homeless-b67f9.firebaseio.com"
 })
 
 let db = admin.firestore();

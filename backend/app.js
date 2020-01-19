@@ -11,6 +11,7 @@ const axios = require('axios');
 var admin = require("firebase-admin");
 var serviceAccount = require("./auth.json");
 var fs = require('fs');
+const crypto = require("crypto");
 
 var base64ToImage = require('base64-to-image');
 
@@ -41,82 +42,119 @@ admin.initializeApp({
 
 let db = admin.firestore();
 
-// async function getUser(userId) {
-//     try {
-        
-//         // return await db.ref('/users/' + userId).once('value');
-//     } catch (error) {
-//         return {"error": error}
-//     }
-// }
-
 app.get('/', function (req, res) {
   res.render(path.join(__dirname + '/dist/index.html'))
 })
 const port = 3000;
 
-app.get('/getuser/:id', async function(req, res) {
-    var userId = req.params.id;
-    db.collection('users').get()
-        .then((snapshot) => {
-            snapshot.forEach((doc) => {
-                if(doc.id == userId) {
-                    console.log(doc.id, '=>', doc.data());
-                    
-                    res.json(doc.data());
-                }
-            });
-        })
-        .catch((err) => {
-            console.log('Error getting documents', err);
-        });
-    // "wOEE0F748791Pd2xlJzh"
-    // await getUser(req.params.id).then((data) => {console.log(data); res.json(data)})
-});
+app.post('/login',upload.single("file"), async function(req, res) {
 
-app.post('/adduser', upload.single("file"), async function(req, res) {
-    console.log("hitting add user")
-    
-    
     var base64Str = req.body.file.substring(0,req.body.file.length)
     var path ='/Users/zain/hackathon/uoft-hacks/facenet/data/images/temp/temp/';
     var optionalObj = {'fileName': 'new_person', 'type':'jpg'};
+    base64ToImage(base64Str,path,optionalObj);
 
-    base64ToImage(base64Str,path,optionalObj); 
+    axios.post( 'http://localhost:5000/check_exist', {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    }).then(async function(res){
+        if(res.uuid.length>0){
+            // uuid exist in model
+            db.collection('users').get()
+            .then((snapshot) => {
+                snapshot.forEach(async function(doc){
+                    if(doc.id == res.uuid) {
+                        
+                        // exist on db
+                        var data = { "doc.id": doc.data()};
+                        var hash = sha256(data);
 
-    // fs.readFile('./uploads/image.jpg', function(err, data) {
-    //     if(data){
-    //         let formData = new FormData();
-    //         formData.append('file', data);
+                        // check block chain.
 
+                        var ifExist = await checkChain(hash);
+                        if(ifExist) {
+                            res.json(doc.data());
+                        } else {
+                            res.json({"error": "user hash not on blockchain."});
+                            return
+                        }
 
-    //     }
-    // });
-
-            axios.post( 'http://100.64.219.218:5000/check_exist',
-                  {
-                  headers: {
-                      'Content-Type': 'multipart/form-data'
-                  }
-                }
-              ).then(function(res){
-                  console.log(res);
-                })
-                .catch(function(err){
-                  console.log(err);
+                    }
                 });
+            })
+            .catch((err) => {
+                console.log('Error getting documents', err);
+                res.json({"error": "user does not exist on database"});
+                return
+            });
+        } else {
+            res.json({"error": "user does not exist in model."});
+            return
+        }
+    })
+    .catch(function(err){
+        console.log(err);
+        res.json({"error": "model server did not respond."});
+    });
+});
 
-
+app.post('/adduser', upload.single("file"), async function(req, res) {
     
-
-    let aTuringRef = db.collection('users').doc('022975ee-3a72-11ea-ac19-a45e60ea27e7');
-
-    await aTuringRef.set({
-        'name': 'Alan',
-        'dob': '10-12-1971'
-    }).then(res.json({"message": "user added"}))
-
+    var base64Str = req.body.file
+    var path ='/Users/zain/hackathon/uoft-hacks/facenet/data/images/temp/temp/';
+    var optionalObj = {'fileName': 'new_person', 'type':'jpg'};
     
+    base64ToImage(base64Str,path,optionalObj); 
+    
+    axios.post( 'http://localhost:5000/check_exist',
+            {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }
+        ).then(function(res){
+            console.log(res);
+            if(res.uuid.length>0) {
+                res.json({"error": "Person already exists please authenticate them."});
+            }
+        })
+        .catch(function(err){
+            console.log(err);
+            res.json({"error": "model server did not respond."});
+            return
+    });
+
+    base64ToImage(base64Str,path,optionalObj);
+
+    axios.post( 'http://localhost:5000/add_user',
+            {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }
+        ).then(function(res){
+            if(res.uuid.length>0) {
+                let aTuringRef = db.collection('users').doc(res.uuid);
+                // FIX THIS
+                var data = {
+                    'name': req.body.name,
+                    'dob': req.body.dob
+                }
+                
+                aTuringRef.set(data).then(async function() {
+                    var id = res.uuid;
+                    var data = { id : doc.data()};
+                    var hash = sha256(data);
+                    await addToChain(hash);
+                    res.json({"message": "User registered successfully."})
+                })
+            }
+        })
+        .catch(function(err){
+            console.log(err);
+            res.json({"error": "model server did not respond."});
+    });    
 })
 
 let abi = [ { "constant": true, "inputs": [ { "internalType": "uint256", "name": "hash", "type": "uint256" } ], "name": "hashExists", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "internalType": "uint256", "name": "hash", "type": "uint256" } ], "name": "set", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" } ]
@@ -133,23 +171,23 @@ let privateKey = '4202377ab453ee2261e35a478cf3036e40ed0d24818e790d8156110e8407ac
 let wallet = new ethers.Wallet(privateKey, customHttpProvider);
 let myContract = new ethers.Contract(contractAddress, abi, wallet)
 // send().then(get());
-get(10);
+// get(10);
 
 
 
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
 
-async function send() {
-    await myContract.set("789");
+async function addToChain(hash) {
+    await myContract.set(hash);
 }
 
-async function get(hash) {
+async function checkChain(hash) {
     let tx = await myContract.hashExists(hash);
     console.log(tx);
-    // let blockHash = "0xd963ab8df11738290e71b34e37a76a418411d351d8a4ae51c2a4a48b2b8d1949";
-    // customHttpProvider.getBlock(blockHash).then((block) => {
-    //     console.log(block);
-    // });
 }
 
+
+function sha256(data) {
+    return crypto.createHash("sha256").update(data, "binary").digest("hex");
+}

@@ -27,14 +27,17 @@
               >Take photo
         </v-btn>
     </v-col>
-    <p>
-    <!-- use router-link component for navigation. -->
-    <!-- specify the link by passing the `to` prop. -->
-    <!-- `<router-link>` will be rendered as an `<a>` tag by default -->
+          <h1 v-if="v-success">
     <router-link to="/about">Go to about</router-link>
     <router-link to="/login">Go to Bar</router-link>
   <router-view></router-view>
-    </p>
+
+    </h1>
+    <!-- use router-link component for navigation. -->
+    <!-- specify the link by passing the `to` prop. -->
+    <!-- `<router-link>` will be rendered as an `<a>` tag by default -->
+      
+
     </v-card>
 
   </div>
@@ -58,7 +61,8 @@ export default {
         devices: [],
         firstname: null,
         select: null,
-        age: null
+        age: null,
+        success: null
     }
   },
   components: {
@@ -80,7 +84,7 @@ export default {
               Add the form data we need to submit
           */
     formData.append('file', this.img);
-    axios.post( 'http://localhost:3000/login',
+    var status = await axios.post( 'http://localhost:3000/login',
         formData,
         {
         headers: {
@@ -89,11 +93,20 @@ export default {
       }
   ).then(function(res){
         console.log('SUCCESS!!');
-         this.$router.push({name:'About'},{params:res.params});
+        console.log(res);
+        // console.log(this);
+        this.success = true
+
+        return res.data;
+        
       })
       .catch(function(err){
         console.log(err)
+        return false
       });
+      if(!status){
+        this.$router.push({path:"/About", props: {name: status.name, dob: status.dob}})
+      }
   },
 },
   name: "about"

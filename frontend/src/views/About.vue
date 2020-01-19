@@ -1,7 +1,7 @@
 <template>
   <div class="about">
       <v-container>
-          <h1>Patient {{$route.params.id}}</h1>
+          <h1>Patient</h1>
           <v-row align="center" justify="center"
           >
               <v-card style="height: 300px;width:300px">
@@ -38,5 +38,6 @@
 
 export default {
   name: "about",
+  props: ['name', 'dob']
 };
 </script>

@@ -11,6 +11,7 @@ const axios = require('axios');
 var admin = require("firebase-admin");
 var serviceAccount = require("./auth.json");
 var fs = require('fs');
+var sha256 = require("sha256");
 const crypto = require("crypto");
 
 var base64ToImage = require('base64-to-image');
@@ -49,7 +50,7 @@ const port = 3000;
 
 app.post('/login',upload.single("file"), async function(req, res) {
 
-    var base64Str = req.body.file.substring(0,req.body.file.length)
+    var base64Str = req.body.file
     var path ='/Users/zain/hackathon/uoft-hacks/facenet/data/images/temp/temp/';
     var optionalObj = {'fileName': 'new_person', 'type':'jpg'};
     base64ToImage(base64Str,path,optionalObj);
@@ -58,24 +59,27 @@ app.post('/login',upload.single("file"), async function(req, res) {
         headers: {
             'Content-Type': 'multipart/form-data'
         }
-    }).then(async function(res){
-        if(res.uuid.length>0){
+    }).then(async function(response){
+        if(response.data.uuid.length>0){
             // uuid exist in model
             db.collection('users').get()
             .then((snapshot) => {
                 snapshot.forEach(async function(doc){
-                    if(doc.id == res.uuid) {
+                    if(doc.id == response.data.uuid) {
                         
                         // exist on db
-                        var data = { "doc.id": doc.data()};
-                        var hash = sha256(data);
-
+                        var data = [doc.id, doc.data()];
+                        console.log("exists in db");
+                        console.log(doc.data());
+                        var hash = hashit(JSON.stringify(data));
+                        // console.log(hash);
                         // check block chain.
 
                         var ifExist = await checkChain(hash);
                         if(ifExist) {
                             res.json(doc.data());
                         } else {
+                            console.log("user hash not on blockchain.")
                             res.json({"error": "user hash not on blockchain."});
                             return
                         }
@@ -84,7 +88,7 @@ app.post('/login',upload.single("file"), async function(req, res) {
                 });
             })
             .catch((err) => {
-                console.log('Error getting documents', err);
+                console.log('Error getting documents');
                 res.json({"error": "user does not exist on database"});
                 return
             });
@@ -94,7 +98,7 @@ app.post('/login',upload.single("file"), async function(req, res) {
         }
     })
     .catch(function(err){
-        console.log(err);
+        console.log("model server did not respond.");
         res.json({"error": "model server did not respond."});
     });
 });
@@ -107,35 +111,33 @@ app.post('/adduser', upload.single("file"), async function(req, res) {
     
     base64ToImage(base64Str,path,optionalObj); 
     
-    axios.post( 'http://localhost:5000/check_exist',
-            {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        }
-        ).then(function(res){
-            console.log(res);
-            if(res.uuid.length>0) {
-                res.json({"error": "Person already exists please authenticate them."});
-            }
-        })
-        .catch(function(err){
-            console.log(err);
-            res.json({"error": "model server did not respond."});
-            return
-    });
+    // var exist = await axios.post( 'http://localhost:5000/check_exist',
+    //         {
+    //         headers: {
+    //             'Content-Type': 'multipart/form-data'
+    //         }
+    //     }
+    //     ).then(function(response){
+    //         // console.log(response);
+    //         if(response.data.uuid.length>0) {
+    //             console.log("Person already exists please authenticate them.")
+    //             res.json({"error": "Person already exists please authenticate them."});
+    //             return true;
+    //         }
+    //     })
+    //     .catch(function(err){
+    //         console.log("model server did not respond.");
+    //         res.json({"error": "model server did not respond."});
+    //         return true
+    // });
 
-    base64ToImage(base64Str,path,optionalObj);
+    // if(!exist){
+        // base64ToImage(base64Str,path,optionalObj);
 
-    axios.post( 'http://localhost:5000/add_user',
-            {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        }
-        ).then(function(res){
-            if(res.uuid.length>0) {
-                let aTuringRef = db.collection('users').doc(res.uuid);
+    await fetch( 'http://127.0.0.1:5000/add_user' ).then(function(err, response){
+            if(err){console.log(err); return}
+            if(response.data.uuid.length>0) {
+                let aTuringRef = db.collection('users').doc(response.data.uuid);
                 // FIX THIS
                 var data = {
                     'name': req.body.name,
@@ -143,24 +145,26 @@ app.post('/adduser', upload.single("file"), async function(req, res) {
                 }
                 
                 aTuringRef.set(data).then(async function() {
-                    var id = res.uuid;
-                    var data = { id : doc.data()};
-                    var hash = sha256(data);
+                    var id = response.data.uuid;
+                    var data = [id, doc.data()]
+                    var hash = hashit(JSON.stringify(data));
                     await addToChain(hash);
                     res.json({"message": "User registered successfully."})
+                    console.log("user registered successfully")
                 })
             }
         })
         .catch(function(err){
-            console.log(err);
+            console.log("model server did not respond."+err);
             res.json({"error": "model server did not respond."});
-    });    
+    });
+    // }    
 })
 
 let abi = [ { "constant": true, "inputs": [ { "internalType": "uint256", "name": "hash", "type": "uint256" } ], "name": "hashExists", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "internalType": "uint256", "name": "hash", "type": "uint256" } ], "name": "set", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" } ]
 
 // Connect to the network
-let url = "http://100.65.202.144:7545";
+let url = "http://100.65.83.200:7545";
 let customHttpProvider = new ethers.providers.JsonRpcProvider(url);
 
 // The address from the above deployment example
@@ -185,9 +189,19 @@ async function addToChain(hash) {
 async function checkChain(hash) {
     let tx = await myContract.hashExists(hash);
     console.log(tx);
+    return tx;
 }
 
 
-function sha256(data) {
-    return crypto.createHash("sha256").update(data, "binary").digest("hex");
+async function hashit(data) {
+    // var first = parseInt("4410777595478936705512751944337873".substr(0,10));
+    // var second = parseInt("1418985490348689193595175156116443938027044".substr(0,10));
+    // await addToChain(first)
+    // await addToChain(second)
+    // console.log(sha256(data))
+    var hash = sha256(data);
+    mystring = hash.replace(/\D/g,'');
+    var first = parseInt("4410777595478936705512751944337873".substr(0,10));
+    console.log(first);
+    return first;
 }

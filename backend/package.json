@@ -18,6 +18,7 @@
     "firebase-admin": "^8.9.1",
     "firebase-functions": "^3.3.0",
     "form-data": "^3.0.0",
-    "multer": "^1.4.2"
+    "multer": "^1.4.2",
+    "sha256": "^0.2.0"
   }
 }

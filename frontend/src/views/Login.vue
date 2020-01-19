@@ -87,9 +87,9 @@ export default {
             'Content-Type': 'multipart/form-data'
         }
       }
-    ).then(function(){
+  ).then(function(res){
         console.log('SUCCESS!!');
-         this.$router.push({name:'About'});
+         this.$router.push({name:'About'},{params:res.params});
       })
       .catch(function(err){
         console.log(err)

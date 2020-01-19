@@ -26,6 +26,6 @@
 // @ is an alias to /src
 
 export default {
-  name: "about"
+  name: "about",
 };
 </script>

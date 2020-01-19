@@ -89,6 +89,7 @@ export default {
       }
     ).then(function(){
         console.log('SUCCESS!!');
+         this.$router.push({name:'About'});
       })
       .catch(function(err){
         console.log(err)

@@ -1,7 +1,7 @@
 # Off the Block 
 2nd place At UofTHacks 2020 ChainSafe  
 
-##We wanted to help the invisible people of Toronto, many homeless people do not have identification and often have a hard time keeping it due to their belongings being stolen. This prevents many homeless people to getting the care that they need and the access to resources that an ordinary person does not need to think about.
+# We wanted to help the invisible people of Toronto, many homeless people do not have identification and often have a hard time keeping it due to their belongings being stolen. This prevents many homeless people to getting the care that they need and the access to resources that an ordinary person does not need to think about.
 
 **How**
 Our application would be set up as a booth or kiosks within pharmacies or clinics so homeless people can be verified easily.
